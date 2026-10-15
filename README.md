@@ -1,7 +1,7 @@
 # students-alcohol-grades.
 Aim 
 
-This project aim waai to find out  whether students with higher weekend alcohol consumption have lower average final grades. 
+This project aim was to find out  whether students with higher weekend alcohol consumption have lower average final grades. 
 
 Files 
 
