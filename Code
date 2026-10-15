@@ -1,0 +1,109 @@
+
+# 1. Import the data
+
+dati <- read.csv("student-mat.csv", sep = ";")
+
+
+# 2. Check the dataset
+
+dim(dati)
+names(dati)
+str(dati)
+summary(dati)
+sum(is.na(dati))
+sum(duplicated(dati))
+summary(dati[c("Dalc", "Walc", "G1", "G2",
+               "G3", "studytime", "absences")])
+table(dati$Walc)
+
+
+# 3. Calculate group statistics
+
+risultati <- data.frame()
+for (i in 1:5) {
+  voti <- dati$G3[dati$Walc == i]
+  n <- length(voti)
+  media <- mean(voti)
+  deviazione <- sd(voti)
+  errore <- deviazione / sqrt(n)
+  m2 <- mean((voti - media)^2)
+  m3 <- mean((voti - media)^3)
+  asimmetria <- sqrt(n * (n - 1)) / (n - 2) *
+                m3 / (m2^(3/2))
+  risultati <- rbind(risultati, data.frame(
+    Walc = i, n = n, mean = media,
+    SD = deviazione, SE = errore,
+    skewness = asimmetria))
+}
+round(risultati, 4)
+
+
+# 4. Compare with the PDF
+
+pdf <- data.frame(
+  Walc = 1:5, n = c(151, 85, 80, 51, 28),
+  mean = c(10.74, 10.08, 10.73, 9.69, 10.14),
+  SD = c(5.13, 4.95, 3.70, 3.62, 4.13),
+  SE = c(0.42, 0.54, 0.41, 0.51, 0.78),
+  skewness = c(-0.70, -0.91, -0.55, -0.86, -0.71))
+differenze <- risultati
+differenze[, 2:6] <- risultati[, 2:6] - pdf[, 2:6]
+round(differenze, 4)
+
+
+# 5-6. Plot mean grades with SE and SD
+
+plot(risultati$Walc, risultati$mean,
+  ylim = c(0, 20), pch = 19, col = "steelblue4",
+  xlab = "Weekend alcohol level (Walc)",
+  ylab = "Final mathematics grade G3 (0-20)",
+  main = "Mean final grade +/- SE")
+arrows(risultati$Walc,
+  risultati$mean - risultati$SE,
+  risultati$Walc,
+  risultati$mean + risultati$SE,
+  angle = 90, code = 3, length = 0.08,
+  col = "steelblue4")
+
+plot(risultati$Walc, risultati$mean,
+  ylim = c(0, 20), pch = 19, col = "steelblue4",
+  xlab = "Weekend alcohol level (Walc)",
+  ylab = "Final mathematics grade G3 (0-20)",
+  main = "Mean final grade +/- SD")
+arrows(risultati$Walc,
+  risultati$mean - risultati$SD,
+  risultati$Walc,
+  risultati$mean + risultati$SD,
+  angle = 90, code = 3, length = 0.08,
+  col = "steelblue4")
+
+
+# 7. Draw illustrative normal curves
+
+x <- seq(-10, 30, length.out = 500)
+plot(x, dnorm(x, risultati$mean[1],
+                 risultati$SD[1]),
+  type = "l", col = 1, xlab = "Final grade G3",
+  ylab = "Density",
+  main = "Illustrative normal curves")
+for (i in 2:5) {
+  lines(x, dnorm(x, risultati$mean[i],
+                 risultati$SD[i]), col = i)
+}
+legend("topright", legend = paste("Walc", 1:5),
+       col = 1:5, lty = 1)
+
+
+# 8. Save results and compare extreme means
+
+dir.create("risultati", showWarnings = FALSE)
+write.csv(risultati,
+  "risultati/raw_group_summary.csv",
+  row.names = FALSE)
+write.csv(pdf,
+  "risultati/pdf_transcribed_summary.csv",
+  row.names = FALSE)
+write.csv(differenze,
+  "risultati/raw_vs_pdf_comparison.csv",
+  row.names = FALSE)
+diff(range(risultati$mean))
